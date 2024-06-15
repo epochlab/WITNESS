@@ -1,0 +1,9 @@
+pillow
+numpy
+opencv-python
+torch
+diffusers
+transformers
+accelerate
+tqdm
+exifread
