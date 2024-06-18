@@ -3,7 +3,7 @@
 import numpy as np
 
 def process(x):
-    x = (x * 255.0).astype('int')
+    x = np.array(x)
     pixel_count = np.zeros([5, 256], dtype=int)
 
     for i in range(256):
@@ -14,6 +14,8 @@ def process(x):
         pixel_count[4,i] = np.count_nonzero(x[:,:,2] == i)
 
     pixels = x.shape[0] * x.shape[1]
+    min = x.min()
+    max = x.max()
     argmin = np.argmin(pixel_count[1])
     argmax = np.argmax(pixel_count[1])
     mean = round(np.mean(x), 2)
@@ -23,4 +25,4 @@ def process(x):
     empty_bins = np.sum(pixel_count[1] == 0)
     unique_colors = np.unique(np.reshape(x, (pixels, x.shape[2])), axis=0).shape[0]
 
-    return pixel_count, (pixels, argmin, argmax, mean, std, median, nonzero, empty_bins, unique_colors)
+    return pixel_count, (pixels, min, max, argmin, argmax, mean, std, median, nonzero, empty_bins, unique_colors)
