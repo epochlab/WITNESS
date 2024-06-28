@@ -12,11 +12,11 @@ def device_mapper() -> torch.device:
 def load_image(file: str) -> Image.Image:
     return Image.open(file)
 
-def image2array(x, dtype='float32'):
+def image2array(x, dtype=np.float32):
     return np.array(x, dtype=dtype) / 255.0
 
 def array2image(x: np.ndarray) -> Image.Image:
-    return Image.fromarray((x * 255.0).astype("uint8"))
+    return Image.fromarray((x * 255.0).astype(np.uint8))
 
 def minmax_norm(x):
     return (x - np.min(x)) / (np.max(x) - np.min(x))
