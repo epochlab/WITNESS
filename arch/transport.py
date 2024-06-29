@@ -6,6 +6,8 @@ from PIL import Image
 import OpenEXR
 import Imath
 
+from arch import utils
+
 def sort_key(item: list) -> list:
     name = item[0]
     if name == 'RGB': return (0, '')
@@ -17,26 +19,25 @@ def read(file: str) -> list:
     pt = Imath.PixelType(Imath.PixelType.FLOAT)
     header = handle.header()
     dw = header['dataWindow']
-    w = dw.max.x - dw.min.x + 1
-    h = dw.max.y - dw.min.y + 1
+    h, w = dw.max.y - dw.min.y + 1, dw.max.x - dw.min.x + 1
 
     layers = []
     rgb_layers = ['R', 'G', 'B']
-    RGB = [np.frombuffer(handle.channel(c, pt), dtype=np.float32).reshape((h, w)) for c in rgb_layers]
-    RGB =  np.stack(RGB, axis=-1)
-    layers.append(('RGB', np.power(RGB, 1/2.2)))
+    RGB = np.stack([np.frombuffer(handle.channel(c, pt), dtype=np.float32).reshape((h, w)) for c in rgb_layers], axis=-1)
+    layers.append(('RGB', utils.array2image(np.power(RGB, 1/2.2))))
 
     channels = header['channels']
     pattern = re.compile(r"([^.]*)\.")
     single_channels = {ch for ch in channels if not pattern.match(ch) and ch not in rgb_layers}
     for name in single_channels:
         data = np.frombuffer(handle.channel(f'{name}', pt), dtype=np.float32).reshape((h, w))
-        layers.append((f'{name}', np.power(data, 1/2.2)))
+        layers.append((f'{name}', utils.array2image(np.power(data, 1/2.2))))
+
     prefix_channels = {pattern.match(ch).group(1) for ch in channels if pattern.match(ch)}
     for name in prefix_channels:
-        data = [np.frombuffer(handle.channel(f'{name}.{c}', pt), dtype=np.float32).reshape((h, w)) for c in ['X', 'Y', 'Z']]
-        data = np.stack(data, axis=-1)
-        layers.append((f'{name}', np.power(data, 1/2.2)))
+        data = np.stack([np.frombuffer(handle.channel(f'{name}.{c}', pt), dtype=np.float32).reshape((h, w)) for c in ['X', 'Y', 'Z']], axis=-1)
+        layers.append((f'{name}', utils.array2image(np.power(data, 1/2.2))))
+
     return sorted(layers, key=sort_key)
 
 def write(rgb: np.ndarray, aov: dict[str, Image.Image], filename: str) -> OpenEXR.Header:

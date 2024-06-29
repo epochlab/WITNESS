@@ -12,16 +12,16 @@ def device_mapper() -> torch.device:
 def load_image(file: str) -> Image.Image:
     return Image.open(file)
 
-def image2array(x, dtype=np.float32):
+def image2array(x: Image.Image, dtype=np.float32) -> np.ndarray:
     return np.array(x, dtype=dtype) / 255.0
 
 def array2image(x: np.ndarray) -> Image.Image:
     return Image.fromarray((x * 255.0).astype(np.uint8))
 
-def minmax_norm(x):
+def minmax_norm(x: np.ndarray) -> np.ndarray:
     return (x - np.min(x)) / (np.max(x) - np.min(x))
 
-def x_norm(img):
+def x_norm(img: np.ndarray) -> np.ndarray:
     n_channels = [minmax_norm(img[:,:,i]) for i in range(img.shape[2])]
     return np.stack(n_channels, axis=2)
 
@@ -36,12 +36,10 @@ def create_lut(low: float, high: float) -> np.ndarray:
     return np.clip(lut, 0, 1).astype(np.float32)
 
 def contact_layer(imgs: list, rows: int, cols: int, labels: list=None, font_size: int=20, offset: int=10) -> Image.Image:
-    if imgs[0].ndim == 2: h, w = imgs[0].shape
-    elif imgs[0].ndim == 3: h, w, _ = imgs[0].shape
+    w, h = imgs[0].size
     grid = Image.new('RGB', size=(cols*w, rows*h))
     font = ImageFont.load_default(font_size)
     for i, img in enumerate(imgs):
-        img = array2image(img)
         if labels:
             draw = ImageDraw.Draw(img)
             text = labels[i]
