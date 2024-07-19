@@ -3,21 +3,20 @@
 from dataclasses import dataclass
 
 import numpy as np
-from PIL import Image
+# from PIL import Image
 from tqdm.auto import tqdm
 import torch
 from diffusers import AutoencoderKL, UNet2DConditionModel, LMSDiscreteScheduler
 from transformers import CLIPTextModel, CLIPTokenizer, logging
 
-logging.set_verbosity_error() # Supress some unnecessary warnings when loading the CLIPTextModel
-
 class LatentDiffusion():
-    def __init__(self, device: str):
+    def __init__(self, model: str, device: str):
+        self.model = model
         self.device = device
         self.tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=torch.float16)
         self.text_encoder = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14", torch_dtype=torch.float16).to(self.device)
-        self.vae = AutoencoderKL.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="vae", torch_dtype=torch.float16).to(self.device)
-        self.unet = UNet2DConditionModel.from_pretrained("CompVis/stable-diffusion-v1-4", subfolder="unet", torch_dtype=torch.float16).to(self.device)
+        self.vae = AutoencoderKL.from_pretrained(self.model, subfolder="vae", torch_dtype=torch.float16).to(self.device)
+        self.unet = UNet2DConditionModel.from_pretrained(self.model, subfolder="unet", torch_dtype=torch.float16).to(self.device)
         self.scheduler = LMSDiscreteScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", num_train_timesteps=1000)
 
     def generate(self,
